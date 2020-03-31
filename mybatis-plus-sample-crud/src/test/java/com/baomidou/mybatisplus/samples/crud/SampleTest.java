@@ -1,18 +1,5 @@
 package com.baomidou.mybatisplus.samples.crud;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.Resource;
-
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
-
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -20,6 +7,17 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.samples.crud.entity.User;
 import com.baomidou.mybatisplus.samples.crud.mapper.UserMapper;
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import javax.annotation.Resource;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * <p>
@@ -58,7 +56,11 @@ public class SampleTest {
 
     @Test
     public void cUpdate() {
+        System.out.println("------------------------");
+        //方式1: UPDATE user SET email='ab@c.c' WHERE id=1
         assertThat(mapper.updateById(new User().setId(1L).setEmail("ab@c.c"))).isGreaterThan(0);
+        assertThat(mapper.selectById(1).getEmail()).isEqualTo("ab@c.c");
+        //方式2: UPDATE user SET name='mp', age=3 WHERE (id = 2)
         assertThat(
                 mapper.update(
                         new User().setName("mp"),
@@ -71,15 +73,16 @@ public class SampleTest {
         assertThat(user.getAge()).isEqualTo(3);
         assertThat(user.getName()).isEqualTo("mp");
 
+        //方式2: UPDATE user SET email=NULL WHERE (id = 2)
         mapper.update(
                 null,
                 Wrappers.<User>lambdaUpdate().set(User::getEmail, null).eq(User::getId, 2)
         );
-        assertThat(mapper.selectById(1).getEmail()).isEqualTo("ab@c.c");
         user = mapper.selectById(2);
         assertThat(user.getEmail()).isNull();
         assertThat(user.getName()).isEqualTo("mp");
 
+        //方式3: UPDATE user SET email='miemie@baomidou.com' WHERE (id = 2)
         mapper.update(
                 new User().setEmail("miemie@baomidou.com"),
                 new QueryWrapper<User>()
@@ -88,6 +91,7 @@ public class SampleTest {
         user = mapper.selectById(2);
         assertThat(user.getEmail()).isEqualTo("miemie@baomidou.com");
 
+        //方式4: UPDATE user SET email='miemie2@baomidou.com', age=NULL WHERE (id = 2)
         mapper.update(
                 new User().setEmail("miemie2@baomidou.com"),
                 Wrappers.<User>lambdaUpdate()
@@ -108,10 +112,15 @@ public class SampleTest {
                         .setEmail("miemie@baomidou.com")
                         .setAge(3));
         assertThat(mapper.selectById(10086L).getEmail()).isEqualTo("miemie@baomidou.com");
+
+        System.out.println("===========方式1============");
+        //SELECT id,name,age,email FROM user WHERE (id = 10086)
         User user = mapper.selectOne(new QueryWrapper<User>().lambda().eq(User::getId, 10086));
         assertThat(user.getName()).isEqualTo("miemie");
         assertThat(user.getAge()).isEqualTo(3);
 
+        System.out.println("===========方式2============");
+        //SELECT id FROM user
         mapper.selectList(Wrappers.<User>lambdaQuery().select(User::getId))
                 .forEach(x -> {
                     assertThat(x.getId()).isNotNull();
@@ -119,6 +128,10 @@ public class SampleTest {
                     assertThat(x.getName()).isNull();
                     assertThat(x.getAge()).isNull();
                 });
+
+
+        System.out.println("===========方式3============");
+        //SELECT id,name FROM user
         mapper.selectList(new QueryWrapper<User>().select("id", "name"))
                 .forEach(x -> {
                     assertThat(x.getId()).isNotNull();
