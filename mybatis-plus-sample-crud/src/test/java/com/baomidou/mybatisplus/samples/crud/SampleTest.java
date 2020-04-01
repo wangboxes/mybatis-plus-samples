@@ -143,25 +143,10 @@ public class SampleTest {
 
     @Test
     public void orderBy() {
+        //SELECT id,name,age,email FROM user ORDER BY age ASC
         List<User> users = mapper.selectList(Wrappers.<User>query().orderByAsc("age"));
+        System.out.println("users = " + users);
         assertThat(users).isNotEmpty();
-    }
-
-    @Test
-    public void selectMaps() {
-        List<Map<String, Object>> mapList = mapper.selectMaps(Wrappers.<User>query().orderByAsc("age"));
-        assertThat(mapList).isNotEmpty();
-        assertThat(mapList.get(0)).isNotEmpty();
-        System.out.println(mapList.get(0));
-    }
-
-    @Test
-    public void selectMapsPage() {
-        IPage<Map<String, Object>> page = mapper.selectMapsPage(new Page<>(1, 5), Wrappers.<User>query().orderByAsc("age"));
-        assertThat(page).isNotNull();
-        assertThat(page.getRecords()).isNotEmpty();
-        assertThat(page.getRecords().get(0)).isNotEmpty();
-        System.out.println(page.getRecords().get(0));
     }
 
     @Test
@@ -171,17 +156,42 @@ public class SampleTest {
     }
 
     @Test
+    public void selectMaps() {
+        // SELECT id,name,age,email FROM user ORDER BY age ASC
+        List<Map<String, Object>> mapList = mapper.selectMaps(Wrappers.<User>query().orderByAsc("age"));
+        assertThat(mapList).isNotEmpty();
+        assertThat(mapList.get(0)).isNotEmpty();
+        System.out.println(mapList.get(0));
+    }
+
+    @Test
+    public void selectMapsPage() {
+        //SELECT id,name,age,email FROM user ORDER BY age ASC limit 2
+        IPage<Map<String, Object>> page = mapper.selectMapsPage(new Page<>(1, 2), Wrappers.<User>query().orderByAsc("age"));
+        System.out.println("-------------->"+page.getRecords());
+        assertThat(page).isNotNull();
+        assertThat(page.getRecords()).isNotEmpty();
+        assertThat(page.getRecords().get(0)).isNotEmpty();
+        //System.out.println(page.getRecords().get(0));
+    }
+
+
+    @Test
     public void testSelectMaxId() {
+        //SELECT max(id) as id FROM user
         QueryWrapper<User> wrapper = new QueryWrapper<>();
         wrapper.select("max(id) as id");
         User user = mapper.selectOne(wrapper);
+        System.out.println("user =========== " + user);
         System.out.println("maxId=" + user.getId());
+        //SELECT id,name,age,email FROM user ORDER BY id DESC
         List<User> users = mapper.selectList(Wrappers.<User>lambdaQuery().orderByDesc(User::getId));
         Assert.assertEquals(user.getId().longValue(), users.get(0).getId().longValue());
     }
 
     @Test
     public void testGroup() {
+        //SELECT age, count(*) FROM user GROUP BY age
         QueryWrapper<User> wrapper = new QueryWrapper<>();
         wrapper.select("age, count(*)")
                 .groupBy("age");
@@ -192,6 +202,7 @@ public class SampleTest {
         /**
          * lambdaQueryWrapper groupBy orderBy
          */
+        //SELECT age FROM user GROUP BY age ORDER BY age ASC
         LambdaQueryWrapper<User> lambdaQueryWrapper = new QueryWrapper<User>().lambda()
                 .select(User::getAge)
                 .groupBy(User::getAge)
@@ -203,6 +214,7 @@ public class SampleTest {
 
     @Test
     public void testTableFieldExistFalse(){
+        //SELECT age, count(age) as count FROM user GROUP BY age
         QueryWrapper<User> wrapper = new QueryWrapper<>();
         wrapper.select("age, count(age) as count")
                 .groupBy("age");
@@ -213,6 +225,8 @@ public class SampleTest {
             Assert.assertNotNull(x.getAge());
             Assert.assertNotNull(x.getCount());
         });
+
+
         mapper.insert(
                 new User().setId(10088L)
                         .setName("miemie")
