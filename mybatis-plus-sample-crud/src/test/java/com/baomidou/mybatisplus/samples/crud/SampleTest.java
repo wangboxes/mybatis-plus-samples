@@ -7,9 +7,11 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.samples.crud.entity.User;
 import com.baomidou.mybatisplus.samples.crud.mapper.UserMapper;
+import com.baomidou.mybatisplus.samples.crud.service.UserService;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -34,15 +36,33 @@ public class SampleTest {
     @Resource
     private UserMapper mapper;
 
+    @Autowired
+    private UserService userService;
+
+    @Test
+    public void aInsert1() {
+        userService.insertCount();
+    }
+
     @Test
     public void aInsert() {
+
+        QueryWrapper wrapper = new QueryWrapper();
+        Integer count = mapper.selectCount(wrapper);
+        System.out.println("count = " + count);
+
+
         User user = new User();
         user.setName("小羊");
         user.setAge(3);
         user.setEmail("abc@mp.com");
+
         assertThat(mapper.insert(user)).isGreaterThan(0);
-        // 成功直接拿会写的 ID
+        // 成功直接拿回写的 ID
         assertThat(user.getId()).isNotNull();
+
+        Integer count2 = mapper.selectCount(wrapper);
+        System.out.println("count2 = " + count2);
     }
 
 
@@ -56,9 +76,19 @@ public class SampleTest {
 
     @Test
     public void cUpdate() {
+        //要添加 mybatis-plus-support 依赖
+       /* Wrapper<User> wrapper = new EntityWrapper<>();
+
+        mapper.update(new User(),wrapper);*/
+
+
         System.out.println("------------------------");
         //方式1: UPDATE user SET email='ab@c.c' WHERE id=1
         assertThat(mapper.updateById(new User().setId(1L).setEmail("ab@c.c"))).isGreaterThan(0);
+        User user1 = mapper.selectById(1);
+        System.out.println("user1 ============ " + user1);
+
+
         assertThat(mapper.selectById(1).getEmail()).isEqualTo("ab@c.c");
         //方式2: UPDATE user SET name='mp', age=3 WHERE (id = 2)
         assertThat(
@@ -70,6 +100,7 @@ public class SampleTest {
                 )
         ).isGreaterThan(0);
         User user = mapper.selectById(2);
+
         assertThat(user.getAge()).isEqualTo(3);
         assertThat(user.getName()).isEqualTo("mp");
 
@@ -168,6 +199,8 @@ public class SampleTest {
     public void selectMapsPage() {
         //SELECT id,name,age,email FROM user ORDER BY age ASC limit 2
         IPage<Map<String, Object>> page = mapper.selectMapsPage(new Page<>(1, 2), Wrappers.<User>query().orderByAsc("age"));
+
+
         System.out.println("-------------->"+page.getRecords());
         assertThat(page).isNotNull();
         assertThat(page.getRecords()).isNotEmpty();
